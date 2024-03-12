@@ -122,7 +122,7 @@ impl Parser {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::{Expression, LetStatement, NodeType, Statement, to_concrete_statement};
+    use crate::ast::{LetStatement, Node, NodeType, Statement, to_concrete_statement};
     use crate::lexer::Lexer;
     use crate::parser::Parser;
 
