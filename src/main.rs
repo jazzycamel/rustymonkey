@@ -1,9 +1,11 @@
 use std::io;
 use std::io::{stdout, Write};
-use std::string::ToString;
+
 
 mod token;
 mod lexer;
+mod ast;
+mod parser;
 
 const PROMPT: &str = ">> ";
 
@@ -17,8 +19,9 @@ fn main() {
         let mut buffer = String::new();
         io::stdin().read_line(&mut buffer).unwrap();
         let mut lexer = lexer::Lexer::new(buffer);
-        while let token = lexer.next_token() {
-            if(token.token_type == token::TokenType::EOF) {
+        loop {
+            let token = lexer.next_token();
+            if token.token_type == token::TokenType::EOF {
                 break;
             }
             println!("{:?}", token);
