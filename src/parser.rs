@@ -112,10 +112,10 @@ impl Parser {
 
         Some(Box::new(ReturnStatement {
             token,
-            value: Box::new(Identifier {
+            value: Some(Box::new(Identifier {
                 token: Token::new(TokenType::Ident, String::from("")),
                 value: String::from(""),
-            }),
+            })),
         }))
     }
 }

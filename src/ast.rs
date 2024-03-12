@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter, Result};
 use as_any::{AsAny};
 use crate::token::Token;
 use dyn_clone::DynClone;
@@ -45,7 +46,7 @@ macro_rules! impl_node {
     };
 }
 
-pub trait Node {
+pub trait Node: Display {
     fn node_type(&self) -> NodeType;
     fn token_literal(&self) -> String;
 }
@@ -86,6 +87,16 @@ impl Node for Program {
     }
 }
 
+impl Display for Program {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let mut out = String::new();
+        for statement in &self.statements {
+            out.push_str(&statement.to_string());
+        }
+        write!(f, "{}", out)
+    }
+}
+
 impl Program {
     pub fn new() -> Self {
         Self {
@@ -104,6 +115,12 @@ impl_node!(Identifier, NodeType::Identifier);
 
 impl Expression for Identifier {}
 
+impl Display for Identifier {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{}", self.value)
+    }
+}
+
 #[derive(Clone)]
 pub struct LetStatement {
     pub token: Token,
@@ -115,22 +132,85 @@ impl_node!(LetStatement, NodeType::LetStatement);
 
 impl Statement for LetStatement {}
 
+impl Display for LetStatement {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{} {} = {};", self.token_literal(), self.name, self.value)
+    }
+}
+
 #[derive(Clone)]
 pub struct ReturnStatement {
     pub token: Token,
-    pub value: Box<dyn Expression>,
+    pub value: Option<Box<dyn Expression>>,
 }
 
 impl_node!(ReturnStatement, NodeType::ReturnStatement);
 
 impl Statement for ReturnStatement {}
 
+impl Display for ReturnStatement {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        let mut out = String::new();
+        out.push_str(&self.token_literal());
+        out.push_str(
+            match &self.value {
+                Some(value) => format!(" {}", value),
+                None => String::from(""),
+            }
+                .as_str(),
+        );
+        out.push_str(";");
+        write!(f, "{}", out)
+    }
+}
+
 #[derive(Clone)]
 pub struct ExpressionStatement {
     pub token: Token,
-    pub expression: Box<dyn Expression>,
+    pub expression: Option<Box<dyn Expression>>,
 }
 
 impl_node!(ExpressionStatement, NodeType::ExpressionStatement);
 
 impl Statement for ExpressionStatement {}
+
+impl Display for ExpressionStatement {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        if self.expression.is_none() {
+            write!(f, "")
+        } else {
+            write!(f, "{}", self.expression.as_ref().unwrap())
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ast::{Identifier, LetStatement, Program};
+    use crate::token::{Token, TokenType};
+
+    #[test]
+    fn test_string() {
+        let mut program = Program::new();
+
+        let token = Token::new(TokenType::Let, "let".to_string());
+        let name = Identifier {
+            token: Token::new(TokenType::Ident, "myVar".to_string()),
+            value: "myVar".to_string(),
+        };
+        let value = Box::new(Identifier {
+            token: Token::new(TokenType::Ident, "anotherVar".to_string()),
+            value: "anotherVar".to_string(),
+        });
+
+        program.statements.push(
+            Box::new(LetStatement {
+                token,
+                name,
+                value,
+            })
+        );
+
+        assert_eq!(program.to_string(), "let myVar = anotherVar;");
+    }
+}
