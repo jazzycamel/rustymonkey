@@ -165,6 +165,22 @@ impl Display for ReturnStatement {
 }
 
 #[derive(Clone)]
+pub struct IntegerLiteral {
+    pub token: Token,
+    pub value: i64,
+}
+
+impl_node!(IntegerLiteral, NodeType::IntegerLiteral);
+
+impl Expression for IntegerLiteral {}
+
+impl Display for IntegerLiteral {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "{}", self.token.literal)
+    }
+}
+
+#[derive(Clone)]
 pub struct ExpressionStatement {
     pub token: Token,
     pub expression: Option<Box<dyn Expression>>,
@@ -181,6 +197,41 @@ impl Display for ExpressionStatement {
         } else {
             write!(f, "{}", self.expression.as_ref().unwrap())
         }
+    }
+}
+
+#[derive(Clone)]
+pub struct PrefixExpression {
+    pub token: Token,
+    pub operator: String,
+    pub right: Box<dyn Expression>,
+}
+
+impl_node!(PrefixExpression, NodeType::PrefixExpression);
+
+impl Expression for PrefixExpression {}
+
+impl Display for PrefixExpression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "({}{})", self.operator, self.right)
+    }
+}
+
+#[derive(Clone)]
+pub struct InfixExpression {
+    pub token: Token,
+    pub left: Box<dyn Expression>,
+    pub operator: String,
+    pub right: Box<dyn Expression>,
+}
+
+impl_node!(InfixExpression, NodeType::InfixExpression);
+
+impl Expression for InfixExpression {}
+
+impl Display for InfixExpression {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(f, "({} {} {})", self.left, self.operator, self.right)
     }
 }
 
